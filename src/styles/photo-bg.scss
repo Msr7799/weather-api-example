@@ -1,0 +1,183 @@
+// SCSS photo background (Sass) - uses Bourbon optionally for mixins
+// Install: pnpm add -D sass bourbon
+@use 'sass:color';
+@use 'sass:math';
+@use 'bourbon'; // optional - works because we installed bourbon
+
+$app-bg-image: '/images/bg2.svg'; // SVG background for light theme
+$overlay-alpha: 0.05;
+
+// Basic variables for loader (kept from your original snippet)
+$background-color: #1B101F;
+$loader-color: #FE665C;
+$loader-size: 32px;
+$loader-animation-duration: 1.15s;
+
+/* Full-page photo background class */
+body.use-photo-bg {
+  position: relative;
+  min-height: 100%;
+  background: url(#{$app-bg-image}) center/cover no-repeat fixed;
+  color: var(--color-text);
+
+  &::before {
+    /* Make the overlay fixed so it always covers the viewport (top-to-bottom)
+       regardless of scrolling or element positions. Use a modest z-index
+       below content but above the background image. */
+    content: '';
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(0,0,0,0.15);
+    pointer-events: none;
+    z-index: 200; /* sits above background but below page content (which has higher z) */
+  }
+
+  // keep page content above the overlay
+  > * {
+    position: relative;
+    z-index: 210; // raise content well above the photo overlay
+  }
+
+  /* When the photo is active, tweak the theme variables for better readability
+     - make cards darker and text lighter so content remains legible over image */
+  --color-card: rgba(0,0,0,0.72);
+  --color-surface: rgba(255,255,255,0.06);
+  --color-text: #ffffff;
+  --color-text-secondary: rgba(255,255,255,0.85);
+  --color-border: rgba(255,255,255,0.06);
+  --shadow-lg: 0 12px 30px rgba(0,0,0,0.6);
+  --spacing-3xl: 3rem;
+}
+
+/* Specific tweaks to ensure common UI panels are opaque and above the photo */
+/* Ensure common UI panels and larger backdrop-blur utilities sit above the photo overlay
+   and are opaque so content remains legible. Added .backdrop-blur-xl and specific
+   Recent Searches selectors (card-nav, nav-card, etc.) which were previously not
+   included and could end up underneath the overlay or appear too transparent. */
+body.use-photo-bg .card,
+body.use-photo-bg .icons-container,
+body.use-photo-bg .leaflet-container,
+body.use-photo-bg .wi-main,
+body.use-photo-bg .icons-grid,
+body.use-photo-bg .icon-item,
+body.use-photo-bg .backdrop-blur-md,
+body.use-photo-bg .backdrop-blur-lg,
+body.use-photo-bg .backdrop-blur-xl,
+body.use-photo-bg .card-nav,
+body.use-photo-bg .card-nav-container,
+body.use-photo-bg .card-nav-content,
+body.use-photo-bg .nav-card,
+body.use-photo-bg .card-nav-top {
+  position: relative;
+  z-index: 300; /* well above the overlay (200) and general content (210) */
+  /* make panels darker and more opaque for legibility */
+  background: rgba(0,0,0,0.86) !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  /* ensure any backdrop filter doesn't make contents too faint */
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* The CardNav top bar and inner controls should float above the content area */
+body.use-photo-bg .card-nav .card-nav-top {
+  z-index: 310;
+}
+
+/* The expanded content area inside CardNav should be clearly visible */
+body.use-photo-bg .card-nav .card-nav-content {
+  z-index: 305;
+  background: rgba(0,0,0,0.64) !important; /* slightly lighter so cards stand out */
+}
+
+/* Search bar and main weather card need extra prominence */
+body.use-photo-bg .weather-search,
+body.use-photo-bg .search-input,
+body.use-photo-bg .main-weather-card {
+  z-index: 220;
+}
+
+/* Optional: container-level photo background */
+.photo-bg {
+  position: relative;
+  background: url(#{$app-bg-image}) center/cover no-repeat fixed;
+  background-size: cover;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0,0,0,$overlay-alpha);
+    pointer-events: none;
+  }
+
+  > * { position: relative; z-index: 5; }
+}
+
+/* Loader styles (adapted to SCSS) */
+.loader,
+.loader__figure {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.loader {
+  overflow: visible;
+  padding-top: $loader-size;
+  width: $loader-size;
+  height: 0;
+}
+
+.loader__figure {
+  width: 0;
+  height: 0;
+  box-sizing: border-box;
+  border: 0 solid $loader-color;
+  border-radius: 50%;
+  animation: loader-figure $loader-animation-duration infinite ease-out;
+}
+
+.loader__label {
+  float: left;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  margin: 0.5em 0 0 50%;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  line-height: 1.5em;
+  color: color.mix($loader-color, $background-color);
+  white-space: nowrap;
+  animation: loader-label $loader-animation-duration infinite ease-out;
+}
+
+@keyframes loader-figure {
+  0% {
+    width: 0; height: 0;
+    background-color: $loader-color;
+  }
+  29% {
+    background-color: $loader-color;
+  }
+  30% {
+    width: $loader-size; height: $loader-size;
+    background-color: transparent;
+    border-width: math.div($loader-size, 2);
+    opacity: 1;
+  }
+  100% {
+    width: $loader-size; height: $loader-size;
+    border-width: 0;
+    opacity: 0;
+    background-color: transparent;
+  }
+}
+
+@keyframes loader-label {
+  0% { opacity: 0.25; }
+  30% { opacity: 1; }
+  100% { opacity: 0.25; }
+}

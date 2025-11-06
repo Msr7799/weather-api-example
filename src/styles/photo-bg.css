@@ -1,0 +1,54 @@
+/* Photo background utilities
+   - Use by adding `use-photo-bg` class to <body> or apply `.photo-bg` to a container
+   - The CSS uses a remote image URL by default; you can replace it with a local path
+     (recommended: copy image to `public/images/bg.jpg` and update the URL below).
+*/
+
+:root {
+  --app-bg-image: url('http://magdeleine.co/wp-content/uploads/2015/07/photo-1418226970361-9f1f7227d638-1400x933.jpeg');
+  --app-bg-overlay-alpha: 0.25;
+}
+
+/* Apply full-page photo background to the <body> */
+body.use-photo-bg {
+  position: relative;
+  background: var(--app-bg-image) center/cover no-repeat fixed;
+  background-size: cover;
+  color: var(--color-text);
+}
+
+/* Darken the photo with an overlay (keeps content readable) */
+body.use-photo-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0; /* top:0; right:0; bottom:0; left:0 */
+  background-color: rgba(0,0,0,var(--app-bg-overlay-alpha));
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* If you prefer to put the photo on a single container instead of the body */
+.photo-bg {
+  position: relative;
+  background: var(--app-bg-image) center/cover no-repeat fixed;
+  background-size: cover;
+}
+
+.photo-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0,0,0,var(--app-bg-overlay-alpha));
+  pointer-events: none;
+}
+
+/* Make sure main content sits above the overlay */
+.photo-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Utility to quickly toggle a lighter overlay */
+.photo-bg--light::after {
+  background-color: rgba(255,255,255,0.08);
+}

@@ -1,9 +1,9 @@
 {
-  "name": "react-fetch",
-  "version": "0.0.0",
+  "name": "professional-weather-app",
+  "version": "1.0.0",
   "private": true,
-  "description": "This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.",
-  "license": "ISC",
+  "description": "Professional weather application with real-time data, realistic weather imagery, and modern glassmorphism UI design",
+  "license": "MIT",
   "author": "",
   "type": "module",
   "main": "eslint.config.js",
@@ -14,18 +14,42 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
+    "clsx": "^2.1.1",
+    "d3-geo": "^3.0.1",
+    "dotenv": "^17.2.3",
+    "framer-motion": "^12.23.24",
+    "gsap": "^3.13.0",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.546.0",
+    "luxon": "^3.7.2",
+    "motion": "^12.23.24",
+    "ogl": "^1.0.11",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "react-icons": "^5.5.0",
+    "react-router-dom": "^7.9.4",
+    "react-simple-maps": "^3.0.0",
+    "tailwind-merge": "^3.3.1",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@tailwindcss/postcss": "^4.1.15",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.4",
+    "autoprefixer": "^10.4.21",
+    "bourbon": "^7.3.0",
     "eslint": "^9.36.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.22",
     "globals": "^16.4.0",
+    "postcss": "^8.5.6",
+    "postcss-custom-properties": "^14.0.6",
+    "sass": "^1.93.2",
+    "tailwindcss": "^4.1.15",
     "vite": "^7.1.7"
   }
 }
