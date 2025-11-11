@@ -8,6 +8,7 @@ import { AnimatedThemeToggler } from './components/ThemeToggle/AnimatedThemeTogg
 import TrueFocus from './components/TrueFocus';
 import CardNav from './components/RecentSearches/CardNav.jsx';
 import WorldMap from './components/WorldMap/WorldMapLeaflet';
+import WorldMapWeather from './components/WorldMap/WorldMapWeather';
 import IconsDisplay from './components/IconsDisplay/IconsDisplay'; 
 import { GradientShadow } from "./components/Buttons/GradientShadow";
 import { GradientIconsButton } from  "./components/Buttons/GradientIconeButton";
@@ -355,6 +356,14 @@ const sampleIcons = [
           </button>
           </GradientShadow>
 
+          <GradientShadow colors={["#10b981", "#3b82f6", "#6366f1"]}>
+          <button 
+        className="rounded bg-black mr-5 px-12 rounded-md py-4 text-white" 
+        onClick={() => navigate('/weather-map')} >
+          🌦️ Weather Map   
+          </button>
+          </GradientShadow>
+
   
   <GradientIconsButton 
     icons={sampleIcons}
@@ -423,7 +432,8 @@ const sampleIcons = [
     <Routes>
       <Route path="/" element={Home} />
       <Route path="/world-map" element={<WorldMap onCountryClick={fetchData} />} />
-      <Route path="/icons-display" element={<IconsDisplay />} /> {/* أضف هذا */}
+      <Route path="/weather-map" element={<WorldMapWeather />} />
+      <Route path="/icons-display" element={<IconsDisplay />} />
     </Routes>
   );
 }

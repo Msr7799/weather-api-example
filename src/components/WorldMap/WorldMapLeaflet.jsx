@@ -9,6 +9,7 @@ L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
 import Spinner from '../Spinner/Spinner';
+import { DragCloseDrawer } from './drawer';
 import { 
   show as fetchWeather, 
   getForecast,
@@ -32,6 +33,8 @@ export default function LeafletWorldMap({ onCountryClick }) {
   const [detailedWeather, setDetailedWeather] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerWeather, setDrawerWeather] = useState(null);
   
   // حفظ History و Pins في localStorage
   const [clickHistory, setClickHistory] = useState(() => {
@@ -169,6 +172,25 @@ export default function LeafletWorldMap({ onCountryClick }) {
     } catch (err) {
       console.error('Failed to fetch detailed weather:', err);
       alert('Failed to load detailed weather. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // فتح الـ drawer مع بيانات الطقس
+  const openDrawerWithWeather = useCallback(async (location) => {
+    setLoading(true);
+    try {
+      const [forecast] = await Promise.all([
+        getForecast(location, 3),
+        new Promise((res) => setTimeout(res, 1000))
+      ]);
+      
+      setDrawerWeather(forecast);
+      setDrawerOpen(true);
+    } catch (err) {
+      console.error('Failed to fetch weather for drawer:', err);
+      alert('Failed to load weather data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -361,7 +383,7 @@ export default function LeafletWorldMap({ onCountryClick }) {
           ` : ''}
 
           <button 
-            onclick="window.showDetailedWeather('${location.name}')"
+            onclick="window.openWeatherDrawer('${location.name}')"
             class="popup-button"
           >
             📊 View 3-Day Forecast
@@ -439,10 +461,21 @@ export default function LeafletWorldMap({ onCountryClick }) {
       });
       fetchDetailedWeather(locationName);
     };
+    
+    window.openWeatherDrawer = (locationName) => {
+      setSelectedLocation(locationName);
+      setClickHistory(prev => {
+        const filtered = prev.filter(item => item !== locationName);
+        return [locationName, ...filtered].slice(0, 20);
+      });
+      openDrawerWithWeather(locationName);
+    };
+    
     return () => {
       delete window.showDetailedWeather;
+      delete window.openWeatherDrawer;
     };
-  }, [fetchDetailedWeather]);
+  }, [fetchDetailedWeather, openDrawerWithWeather]);
 
   // معالج الضغط المزدوج على الخارطة
   useEffect(() => {
@@ -1212,6 +1245,171 @@ export default function LeafletWorldMap({ onCountryClick }) {
           </div>
         </div>
       )}
+
+      {/* الـ Drawer لعرض بيانات الطقس */}
+      <DragCloseDrawer open={drawerOpen} setOpen={setDrawerOpen}>
+        {drawerWeather && (
+          <div className="w-full space-y-4 pb-8">
+            {/* عنوان الموقع */}
+            <div className="border-b border-slate-700 pb-3">
+              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                <img src="/animated_icons/production/fill/all/compass.svg" className="w-7 h-7" />
+                {drawerWeather.location.name}
+              </h2>
+              <p className="text-base text-slate-400 mt-1">
+                {drawerWeather.location.region && `${drawerWeather.location.region}, `}
+                {drawerWeather.location.country}
+              </p>
+            </div>
+
+            {/* الطقس الحالي */}
+            <div className="bg-slate-800/60 backdrop-blur-sm p-6 rounded-xl border border-slate-700">
+              <div className="flex items-center gap-6 mb-4">
+                <div className="w-28 h-28">
+                  <img 
+                    src={getWeatherIcon(drawerWeather.current.condition?.text, drawerWeather.current.is_day)} 
+                    alt="weather" 
+                    className="w-full h-full"
+                  />
+                </div>
+                <div>
+                  <div className="text-5xl font-bold text-white">
+                    {Math.round(drawerWeather.current.temp_c)}°C
+                  </div>
+                  <div className="text-xl text-slate-300 mt-1">
+                    {drawerWeather.current.condition?.text}
+                  </div>
+                  <div className="text-base text-slate-400 mt-2">
+                    Feels like {Math.round(drawerWeather.current.feelslike_c)}°C
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* تفاصيل الرياح - البوصلة */}
+            <div className="bg-slate-800/60 p-6 rounded-xl border border-slate-700">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <img src="/animated_icons/production/fill/all/wind.svg" className="w-6 h-6" /> Wind Details
+              </h3>
+              <div className="flex flex-col items-center mb-4">
+                <div className="relative w-40 h-40">
+                  <div className="absolute inset-0 rounded-full border-4 border-slate-600 bg-slate-900 shadow-inner">
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 text-lg font-bold text-red-400">N</div>
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-lg font-bold text-slate-400">S</div>
+                    <div className="absolute left-2 top-1/2 -translate-y-1/2 text-lg font-bold text-slate-400">W</div>
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 text-lg font-bold text-slate-400">E</div>
+                  </div>
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center transition-transform duration-500"
+                    style={{ transform: `rotate(${drawerWeather.current.wind_degree || 0}deg)` }}
+                  >
+                    <img 
+                      src="/animated_icons/production/fill/all/compass.svg" 
+                      alt="wind direction" 
+                      className="w-24 h-24 opacity-90"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+                  <img src="/animated_icons/production/fill/all/wind.svg" className="w-7 h-7" />
+                  {Math.round(drawerWeather.current.wind_kph)} km/h
+                </div>
+                <div className="text-base text-slate-300 mb-2">
+                  Direction: {formatWindDirection(drawerWeather.current.wind_dir)}
+                </div>
+                <div className="text-sm text-slate-400">
+                  {drawerWeather.current.wind_degree}° from North
+                </div>
+                {drawerWeather.current.gust_kph && (
+                  <div className="mt-3 pt-3 border-t border-slate-700">
+                    <div className="text-base text-slate-300 flex items-center justify-center gap-2">
+                      <img src="/animated_icons/production/fill/all/wind.svg" className="w-5 h-5" /> 
+                      Gusts up to <span className="font-bold text-white">{Math.round(drawerWeather.current.gust_kph)} km/h</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* توقعات 3 أيام */}
+            <div>
+              <h3 className="text-2xl font-bold text-neutral-200 mb-4 flex items-center gap-2">
+                <img src="/animated_icons/production/fill/all/clear-day.svg" className="w-7 h-7" /> 
+                3-Day Forecast
+              </h3>
+              <div className="space-y-4">
+                {drawerWeather.forecast.map((day, idx) => (
+                  <div key={idx} className="bg-slate-800/60 p-5 rounded-xl border border-slate-700">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-20 h-20">
+                          <img 
+                            src={getWeatherIcon(day.day.condition?.text, true)} 
+                            alt="weather" 
+                            className="w-full h-full"
+                          />
+                        </div>
+                        <div>
+                          <div className="font-bold text-white text-lg">
+                            {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                          </div>
+                          <div className="text-base text-slate-300 mt-1">{day.day.condition?.text}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-3xl font-bold text-white">
+                          {Math.round(day.day.maxtemp_c)}°
+                        </div>
+                        <div className="text-base text-slate-400 mt-1">
+                          {Math.round(day.day.mintemp_c)}°
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3 text-base">
+                      <div className="p-3 rounded bg-slate-700/50 flex items-center gap-2">
+                        <img src="/animated_icons/production/fill/all/raindrop.svg" className="w-6 h-6" />
+                        <span className="font-semibold text-white">{day.day.daily_chance_of_rain}%</span>
+                      </div>
+                      <div className="p-3 rounded bg-slate-700/50 flex items-center gap-2">
+                        <img src="/animated_icons/production/fill/all/wind.svg" className="w-6 h-6" />
+                        <span className="font-semibold text-white">{Math.round(day.day.maxwind_kph)} km/h</span>
+                      </div>
+                      <div className="p-3 rounded bg-slate-700/50 flex items-center gap-2">
+                        <img src="/animated_icons/production/fill/all/uv-index.svg" className="w-6 h-6" />
+                        <span className="font-semibold text-white">{day.day.uv}</span>
+                      </div>
+                    </div>
+
+                    {day.astro && (
+                      <div className="mt-4 pt-4 border-t border-slate-700 grid grid-cols-2 gap-3 text-base text-slate-400">
+                        <div className="flex items-center gap-2">
+                          <img src="/animated_icons/production/fill/all/sunrise.svg" className="w-6 h-6" />
+                          <span className="font-semibold text-white">{day.astro.sunrise}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <img src="/animated_icons/production/fill/all/sunset.svg" className="w-6 h-6" />
+                          <span className="font-semibold text-white">{day.astro.sunset}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <img src="/animated_icons/production/fill/all/moon-full.svg" className="w-6 h-6" />
+                          <span className="font-semibold text-white">{day.astro.moon_phase}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <img src="/animated_icons/production/fill/all/moonrise.svg" className="w-6 h-6" />
+                          <span className="font-semibold text-white">{day.astro.moonrise}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </DragCloseDrawer>
     </>
   );
 }
